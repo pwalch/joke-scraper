@@ -1,6 +1,3 @@
-# To use the spider
-# `scrapy crawl blague.info`
-
 import scrapy
 
 from scrapy.spiders import CrawlSpider, Rule
