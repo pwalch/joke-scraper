@@ -11,5 +11,5 @@ class BlagueInfoItem(Item):
     title = Field()
     content = Field()
     category = Field()
-    date = Field()
+    date_text = Field()
     points = Field()

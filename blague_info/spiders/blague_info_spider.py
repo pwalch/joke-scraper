@@ -23,15 +23,32 @@ class BlagueInfoSpider(CrawlSpider):
                     "//a[@class='lien' and starts-with(@href, '?')]"
                 ]
             ),
-            callback="parse_blague",
+            callback="parse_joke_page",
             follow=True
         ),
     )
 
-    def parse_blague(self, response):
+    @staticmethod
+    def extract_joke(jokeRow, category):
+        item = BlagueInfoItem()
+
+        item["category"] = category
+
+        visitSectionSelection = jokeRow.xpath("./font[@class='visit']")
+        item["title"] = visitSectionSelection.xpath("./font/a[@class='humour']/text()").extract()[0]
+
+        pointsDateText = visitSectionSelection.xpath("./text()[2]").extract()[0]
+        pointsDateMatch = re.search("(\d+)\s*points[^\d]+([\d\/]+)", pointsDateText)
+        item["points"] = int(pointsDateMatch.group(1))
+        item["date_text"] = pointsDateMatch.group(2)
+
+        item["content"] = "".join(jokeRow.xpath("./font[3]/node()").extract())
+
+        return item
+
+    def parse_joke_page(self, response):
         jokeRowSelection = response.xpath("//a[starts-with(@href, 'humour/drole-')]/../../..")
+
+        category = re.search("blague - ([\w ]+) :", response.xpath("/html/head/title/text()").extract()[0]).group(1)
         for jokeRow in jokeRowSelection:
-            item = BlagueInfoItem()
-            visitSectionSelection = jokeRow.xpath("./font[@class='visit']")
-            item["title"] = visitSectionSelection.xpath("./font/a[@class='humour']/text()").extract()
-            yield item
+            yield BlagueInfoSpider.extract_joke(jokeRow, category)
