@@ -32,14 +32,16 @@ class BlagueInfoSpider(CrawlSpider):
         item["category"] = category
 
         visitSectionSelection = jokeRow.xpath("./font[@class='visit']")
-        item["title"] = visitSectionSelection.xpath("./font/a[@class='humour']/text()").extract()[0]
+        item["title"] = visitSectionSelection.xpath("normalize-space(./font/a[@class='humour']/text())").extract()[0]
 
         pointsDateText = visitSectionSelection.xpath("./text()[2]").extract()[0]
         pointsDateMatch = re.search("(\d+)\s*points[^\d]+([\d\/]+)", pointsDateText)
         item["points"] = int(pointsDateMatch.group(1))
         item["date_text"] = pointsDateMatch.group(2)
 
-        item["content"] = "".join(jokeRow.xpath("./font[3]/node()").extract())
+        spacedContent = "".join(jokeRow.xpath("./font[3]/node()").extract())
+        normalizedSpaceContent = re.sub("\s+", " ", spacedContent).strip()
+        item["content"] = re.sub("\s*<br>\s*", "\n", normalizedSpaceContent)
 
         return item
 
